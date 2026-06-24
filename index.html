@@ -386,6 +386,7 @@
 </head>
 <body>
 
+<iframe name="formspree_iframe" style="display:none"></iframe>
 <div class="header">
   <div class="logo">REGINOX<span>®</span></div>
   <div class="header-sub">Стэм Реновацио - препараты на основе секретома МСК</div>
@@ -414,7 +415,9 @@
       <div class="success-text">Спасибо. Информация по животному получена.<br>Для следующего животного обновите страницу.</div>
     </div>
 
-    <form id="form-ungiderm" onsubmit="submitForm(event, 'ungiderm')">
+    <form id="form-ungiderm" action="https://formspree.io/f/mlgygbag" method="POST" target="formspree_iframe" onsubmit="handleSubmit(event, 'ungiderm')">
+      <input type="hidden" name="_subject" value="Регинокс - карточка наблюдения: Унгидерм">
+      <input type="hidden" name="_replyto" value="idzhoy@elayamed.ru">
 
       <div class="section">
         <div class="section-head">Данные о животном</div>
@@ -603,7 +606,9 @@
       <div class="success-text">Спасибо. Информация по животному получена.<br>Для следующего животного обновите страницу.</div>
     </div>
 
-    <form id="form-mastiderm" onsubmit="submitForm(event, 'mastiderm')">
+    <form id="form-mastiderm" action="https://formspree.io/f/mlgygbag" method="POST" target="formspree_iframe" onsubmit="handleSubmit(event, 'mastiderm')">
+      <input type="hidden" name="_subject" value="Регинокс - карточка наблюдения: Мастидерм">
+      <input type="hidden" name="_replyto" value="idzhoy@elayamed.ru">
 
       <div class="section">
         <div class="section-head blue">Данные о животном</div>
@@ -812,8 +817,6 @@
   // CHECKBOX / RADIO toggle
   function toggleCheck(el, color, isRadio = false) {
     if (isRadio) {
-      // deselect siblings in same group
-      const name = el.querySelector('input').name;
       const group = el.closest('.check-group');
       if (group) {
         group.querySelectorAll('.check-item').forEach(item => {
@@ -827,8 +830,6 @@
       el.classList.add('checked-' + color);
       el.querySelector('.check-box').textContent = '✓';
     } else {
-      const checked = inp.checked;
-      // will toggle after click
       setTimeout(() => {
         if (inp.checked) {
           el.classList.add('checked-' + color);
@@ -842,61 +843,38 @@
   }
 
   // SCORE SELECT
-  const scoreValues = {};
   function selectScore(field, val, btn, color) {
     const row = btn.closest('.score-row');
     row.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected-green', 'selected-blue'));
     btn.classList.add('selected-' + color);
-    scoreValues[field] = val;
     const inp = document.getElementById(field + '_val');
     if (inp) inp.value = val;
   }
 
-  // FORM SUBMIT via Formspree
-  async function submitForm(e, type) {
-    e.preventDefault();
+  // FORM SUBMIT - native POST через iframe (работает на бесплатном Formspree)
+  function handleSubmit(e, type) {
     const form = e.target;
     const btn = form.querySelector('.submit-btn');
+
+    // Валидация обязательных полей
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      e.preventDefault();
+      return;
+    }
+
     btn.textContent = 'Отправляем...';
     btn.disabled = true;
 
-    const formData = new FormData(form);
-    const obj = {};
-    formData.forEach((val, key) => {
-      if (obj[key]) {
-        obj[key] = Array.isArray(obj[key]) ? [...obj[key], val] : [obj[key], val];
-      } else {
-        obj[key] = val;
-      }
-    });
-    obj['_subject'] = 'Регинокс - карточка наблюдения: ' + (type === 'ungiderm' ? 'Унгидерм' : 'Мастидерм');
+    // Показываем успех через 2.5 сек (форма уже ушла в iframe)
+    setTimeout(() => {
+      const successId = 'success-' + (type === 'ungiderm' ? 'u' : 'm');
+      form.style.display = 'none';
+      document.getElementById(successId).classList.add('show');
+      document.getElementById(successId).scrollIntoView({ behavior: 'smooth' });
+    }, 2500);
 
-    try {
-      const response = await fetch('https://formspree.io/f/mlgygbag', {
-        method: 'POST',
-        body: JSON.stringify(obj),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        form.style.display = 'none';
-        const successId = 'success-' + (type === 'ungiderm' ? 'u' : 'm');
-        document.getElementById(successId).classList.add('show');
-        document.getElementById(successId).scrollIntoView({ behavior: 'smooth' });
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        btn.textContent = 'Отправить карточку';
-        btn.disabled = false;
-        alert('Ошибка отправки: ' + (errData.error || response.status));
-      }
-    } catch (err) {
-      btn.textContent = 'Отправить карточку';
-      btn.disabled = false;
-      alert('Ошибка сети: ' + err.message);
-    }
+    // Разрешаем нативный submit
   }
 </script>
 
