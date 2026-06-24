@@ -411,7 +411,7 @@
     <div id="success-u" class="success-block">
       <div class="success-icon">✅</div>
       <div class="success-title">Данные отправлены!</div>
-      <div class="success-text">Откроется ваш почтовый клиент с заполненными данными.<br>Нажмите "Отправить" в письме - и готово.<br><br>Для следующего животного обновите страницу.</div>
+      <div class="success-text">Спасибо. Информация по животному получена.<br>Для следующего животного обновите страницу.</div>
     </div>
 
     <form id="form-ungiderm" onsubmit="submitForm(event, 'ungiderm')">
@@ -600,7 +600,7 @@
     <div id="success-m" class="success-block">
       <div class="success-icon">✅</div>
       <div class="success-title">Данные отправлены!</div>
-      <div class="success-text">Откроется ваш почтовый клиент с заполненными данными.<br>Нажмите "Отправить" в письме - и готово.<br><br>Для следующего животного обновите страницу.</div>
+      <div class="success-text">Спасибо. Информация по животному получена.<br>Для следующего животного обновите страницу.</div>
     </div>
 
     <form id="form-mastiderm" onsubmit="submitForm(event, 'mastiderm')">
@@ -843,7 +843,7 @@
     if (inp) inp.value = val;
   }
 
-  function submitForm(e, type) {
+  async function submitForm(e, type) {
     e.preventDefault();
     const form = e.target;
 
@@ -853,89 +853,50 @@
     }
 
     const btn = form.querySelector('.submit-btn');
-    btn.textContent = 'Формируем письмо...';
+    btn.textContent = 'Отправляем...';
     btn.disabled = true;
 
-    // Собираем данные формы
-    const data = new FormData(form);
-    const label = type === 'ungiderm' ? 'УНГИДЕРМ' : 'МАСТИДЕРМ';
+    const formData = new FormData(form);
+    const obj = { access_key: '9f157fcc-8e81-4edc-906d-9bb48ddbc7f1' };
+    obj['subject'] = 'Регинокс - карточка наблюдения: ' + (type === 'ungiderm' ? 'Унгидерм' : 'Мастидерм');
+    obj['from_name'] = 'Регинокс Форма';
 
-    let body = 'РЕГИНОКС - Карточка наблюдения: ' + label + '%0A';
-    body += '================================================%0A%0A';
-
-    const labels = {
-      birka: 'Номер бирки',
-      klichka: 'Кличка',
-      poroda: 'Порода',
-      vozrast: 'Возраст',
-      laktatsiya: 'Лактация',
-      data_nachala: 'Дата начала',
-      vetvrach: 'Ветврач',
-      hozyaistvo: 'Хозяйство',
-      diagnoz: 'Диагноз',
-      diagnoz_drugoe: 'Уточнение',
-      dolya: 'Пораженная доля',
-      ksk_do: 'КСК до (тыс/мл)',
-      hromota_do: 'Хромота до (0-4)',
-      nablyudeniya_do: 'Наблюдения до',
-      p1_data: 'Перевязка 1 - дата',
-      p1_hromota: 'Перевязка 1 - хромота',
-      p1_obs: 'Перевязка 1 - наблюдения',
-      p2_data: 'Перевязка 2 - дата',
-      p2_hromota: 'Перевязка 2 - хромота',
-      p2_obs: 'Перевязка 2 - наблюдения',
-      p3_data: 'Перевязка 3 - дата',
-      p3_hromota: 'Перевязка 3 - хромота',
-      p3_obs: 'Перевязка 3 - наблюдения',
-      p4_data: 'Перевязка 4 - дата',
-      p4_hromota: 'Перевязка 4 - хромота',
-      p4_obs: 'Перевязка 4 - наблюдения',
-      p5_data: 'Перевязка 5 - дата',
-      p5_hromota: 'Перевязка 5 - хромота',
-      p5_obs: 'Перевязка 5 - наблюдения',
-      d1_data: 'День 1 - дата', d1_ksk: 'День 1 - КСК', d1_obs: 'День 1 - наблюдения',
-      d3_data: 'День 3 - дата', d3_ksk: 'День 3 - КСК', d3_obs: 'День 3 - наблюдения',
-      d5_data: 'День 5 - дата', d5_ksk: 'День 5 - КСК', d5_obs: 'День 5 - наблюдения',
-      d7_data: 'День 7 - дата', d7_ksk: 'День 7 - КСК', d7_obs: 'День 7 - наблюдения',
-      d10_data: 'День 10 - дата', d10_ksk: 'День 10 - КСК', d10_obs: 'День 10 - наблюдения',
-      d14_data: 'День 14 - дата', d14_ksk: 'День 14 - КСК', d14_obs: 'День 14 - наблюдения',
-      hromota_posle: 'Хромота после (0-4)',
-      ksk_posle: 'КСК после (тыс/мл)',
-      srok_normalizatsii: 'Срок нормализации (дней)',
-      srok_uluchsheniya: 'Срок улучшения (дней)',
-      posle_priznaki: 'Состояние после',
-      rezultat: 'Оценка результата',
-      kommentariy: 'Комментарий ветврача',
-    };
-
-    // Группируем значения (checkbox может быть несколько)
-    const collected = {};
-    for (const [key, val] of data.entries()) {
-      if (key.startsWith('_')) continue;
-      if (collected[key]) {
-        collected[key] += ', ' + val;
+    formData.forEach((val, key) => {
+      if (key.startsWith('_')) return;
+      if (obj[key]) {
+        obj[key] = obj[key] + ', ' + val;
       } else {
-        collected[key] = val;
+        obj[key] = val;
       }
+    });
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(obj)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        form.style.display = 'none';
+        const successId = 'success-' + (type === 'ungiderm' ? 'u' : 'm');
+        document.getElementById(successId).classList.add('show');
+        document.getElementById(successId).scrollIntoView({ behavior: 'smooth' });
+      } else {
+        btn.textContent = 'Отправить карточку';
+        btn.disabled = false;
+        alert('Ошибка: ' + (result.message || JSON.stringify(result)));
+      }
+    } catch (err) {
+      btn.textContent = 'Отправить карточку';
+      btn.disabled = false;
+      alert('Ошибка сети: ' + err.message);
     }
-
-    for (const [key, val] of Object.entries(collected)) {
-      if (!val || val.trim() === '') continue;
-      const lbl = labels[key] || key;
-      body += lbl + ': ' + encodeURIComponent(val) + '%0A';
-    }
-
-    const subject = encodeURIComponent('Регинокс - карточка наблюдения: ' + label);
-    const mailto = 'mailto:idzhoy@elayamed.ru?subject=' + subject + '&body=' + body;
-
-    window.location.href = mailto;
-
-    setTimeout(() => {
-      form.style.display = 'none';
-      const successId = 'success-' + (type === 'ungiderm' ? 'u' : 'm');
-      document.getElementById(successId).classList.add('show');
-      document.getElementById(successId).scrollIntoView({ behavior: 'smooth' });
-    }, 1500);
   }
 </script>
 
