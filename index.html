@@ -386,7 +386,6 @@
 </head>
 <body>
 
-<iframe name="formspree_iframe" style="display:none"></iframe>
 <div class="header">
   <div class="logo">REGINOX<span>®</span></div>
   <div class="header-sub">Стэм Реновацио - препараты на основе секретома МСК</div>
@@ -412,12 +411,10 @@
     <div id="success-u" class="success-block">
       <div class="success-icon">✅</div>
       <div class="success-title">Данные отправлены!</div>
-      <div class="success-text">Спасибо. Информация по животному получена.<br>Для следующего животного обновите страницу.</div>
+      <div class="success-text">Откроется ваш почтовый клиент с заполненными данными.<br>Нажмите "Отправить" в письме - и готово.<br><br>Для следующего животного обновите страницу.</div>
     </div>
 
-    <form id="form-ungiderm" action="https://formspree.io/f/mlgygbag" method="POST" target="formspree_iframe" onsubmit="handleSubmit(event, 'ungiderm')">
-      <input type="hidden" name="_subject" value="Регинокс - карточка наблюдения: Унгидерм">
-      <input type="hidden" name="_replyto" value="idzhoy@elayamed.ru">
+    <form id="form-ungiderm" onsubmit="submitForm(event, 'ungiderm')">
 
       <div class="section">
         <div class="section-head">Данные о животном</div>
@@ -603,12 +600,10 @@
     <div id="success-m" class="success-block">
       <div class="success-icon">✅</div>
       <div class="success-title">Данные отправлены!</div>
-      <div class="success-text">Спасибо. Информация по животному получена.<br>Для следующего животного обновите страницу.</div>
+      <div class="success-text">Откроется ваш почтовый клиент с заполненными данными.<br>Нажмите "Отправить" в письме - и готово.<br><br>Для следующего животного обновите страницу.</div>
     </div>
 
-    <form id="form-mastiderm" action="https://formspree.io/f/mlgygbag" method="POST" target="formspree_iframe" onsubmit="handleSubmit(event, 'mastiderm')">
-      <input type="hidden" name="_subject" value="Регинокс - карточка наблюдения: Мастидерм">
-      <input type="hidden" name="_replyto" value="idzhoy@elayamed.ru">
+    <form id="form-mastiderm" onsubmit="submitForm(event, 'mastiderm')">
 
       <div class="section">
         <div class="section-head blue">Данные о животном</div>
@@ -806,7 +801,6 @@
 </div>
 
 <script>
-  // TAB SWITCH
   function switchTab(name, btn) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -814,7 +808,6 @@
     btn.classList.add('active');
   }
 
-  // CHECKBOX / RADIO toggle
   function toggleCheck(el, color, isRadio = false) {
     if (isRadio) {
       const group = el.closest('.check-group');
@@ -842,7 +835,6 @@
     }
   }
 
-  // SCORE SELECT
   function selectScore(field, val, btn, color) {
     const row = btn.closest('.score-row');
     row.querySelectorAll('.score-btn').forEach(b => b.classList.remove('selected-green', 'selected-blue'));
@@ -851,30 +843,99 @@
     if (inp) inp.value = val;
   }
 
-  // FORM SUBMIT - native POST через iframe (работает на бесплатном Formspree)
-  function handleSubmit(e, type) {
+  function submitForm(e, type) {
+    e.preventDefault();
     const form = e.target;
-    const btn = form.querySelector('.submit-btn');
 
-    // Валидация обязательных полей
     if (!form.checkValidity()) {
       form.reportValidity();
-      e.preventDefault();
       return;
     }
 
-    btn.textContent = 'Отправляем...';
+    const btn = form.querySelector('.submit-btn');
+    btn.textContent = 'Формируем письмо...';
     btn.disabled = true;
 
-    // Показываем успех через 2.5 сек (форма уже ушла в iframe)
+    // Собираем данные формы
+    const data = new FormData(form);
+    const label = type === 'ungiderm' ? 'УНГИДЕРМ' : 'МАСТИДЕРМ';
+
+    let body = 'РЕГИНОКС - Карточка наблюдения: ' + label + '%0A';
+    body += '================================================%0A%0A';
+
+    const labels = {
+      birka: 'Номер бирки',
+      klichka: 'Кличка',
+      poroda: 'Порода',
+      vozrast: 'Возраст',
+      laktatsiya: 'Лактация',
+      data_nachala: 'Дата начала',
+      vetvrach: 'Ветврач',
+      hozyaistvo: 'Хозяйство',
+      diagnoz: 'Диагноз',
+      diagnoz_drugoe: 'Уточнение',
+      dolya: 'Пораженная доля',
+      ksk_do: 'КСК до (тыс/мл)',
+      hromota_do: 'Хромота до (0-4)',
+      nablyudeniya_do: 'Наблюдения до',
+      p1_data: 'Перевязка 1 - дата',
+      p1_hromota: 'Перевязка 1 - хромота',
+      p1_obs: 'Перевязка 1 - наблюдения',
+      p2_data: 'Перевязка 2 - дата',
+      p2_hromota: 'Перевязка 2 - хромота',
+      p2_obs: 'Перевязка 2 - наблюдения',
+      p3_data: 'Перевязка 3 - дата',
+      p3_hromota: 'Перевязка 3 - хромота',
+      p3_obs: 'Перевязка 3 - наблюдения',
+      p4_data: 'Перевязка 4 - дата',
+      p4_hromota: 'Перевязка 4 - хромота',
+      p4_obs: 'Перевязка 4 - наблюдения',
+      p5_data: 'Перевязка 5 - дата',
+      p5_hromota: 'Перевязка 5 - хромота',
+      p5_obs: 'Перевязка 5 - наблюдения',
+      d1_data: 'День 1 - дата', d1_ksk: 'День 1 - КСК', d1_obs: 'День 1 - наблюдения',
+      d3_data: 'День 3 - дата', d3_ksk: 'День 3 - КСК', d3_obs: 'День 3 - наблюдения',
+      d5_data: 'День 5 - дата', d5_ksk: 'День 5 - КСК', d5_obs: 'День 5 - наблюдения',
+      d7_data: 'День 7 - дата', d7_ksk: 'День 7 - КСК', d7_obs: 'День 7 - наблюдения',
+      d10_data: 'День 10 - дата', d10_ksk: 'День 10 - КСК', d10_obs: 'День 10 - наблюдения',
+      d14_data: 'День 14 - дата', d14_ksk: 'День 14 - КСК', d14_obs: 'День 14 - наблюдения',
+      hromota_posle: 'Хромота после (0-4)',
+      ksk_posle: 'КСК после (тыс/мл)',
+      srok_normalizatsii: 'Срок нормализации (дней)',
+      srok_uluchsheniya: 'Срок улучшения (дней)',
+      posle_priznaki: 'Состояние после',
+      rezultat: 'Оценка результата',
+      kommentariy: 'Комментарий ветврача',
+    };
+
+    // Группируем значения (checkbox может быть несколько)
+    const collected = {};
+    for (const [key, val] of data.entries()) {
+      if (key.startsWith('_')) continue;
+      if (collected[key]) {
+        collected[key] += ', ' + val;
+      } else {
+        collected[key] = val;
+      }
+    }
+
+    for (const [key, val] of Object.entries(collected)) {
+      if (!val || val.trim() === '') continue;
+      const lbl = labels[key] || key;
+      body += lbl + ': ' + encodeURIComponent(val) + '%0A';
+    }
+
+    const subject = encodeURIComponent('Регинокс - карточка наблюдения: ' + label);
+    const mailto = 'mailto:idzhoy@elayamed.ru?subject=' + subject + '&body=' + body;
+
+    window.location.href = mailto;
+
     setTimeout(() => {
-      const successId = 'success-' + (type === 'ungiderm' ? 'u' : 'm');
       form.style.display = 'none';
+      const successId = 'success-' + (type === 'ungiderm' ? 'u' : 'm');
       document.getElementById(successId).classList.add('show');
       document.getElementById(successId).scrollIntoView({ behavior: 'smooth' });
-    }, 2500);
-
-    // Разрешаем нативный submit
+    }, 1500);
   }
 </script>
 
